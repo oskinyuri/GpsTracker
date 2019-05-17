@@ -9,19 +9,16 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.location.LocationManager;
-import android.os.Build;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.os.RemoteException;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.widget.Toast;
 
-import com.example.gpstracker.services.TrackerService;
 import com.example.gpstracker.datasource.SharedPrefManager;
 import com.example.gpstracker.datasource.WebServiceMapper;
-import com.example.gpstracker.pojo.LoginParams;
+import com.example.gpstracker.services.TrackerService;
 import com.google.gson.Gson;
 
 public class MainPresenter {
@@ -64,15 +61,7 @@ public class MainPresenter {
 
         Intent intent = new Intent(mContext, TrackerService.class);
         intent.setAction(TrackerService.ACTION_START_SERVICE);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            mContext.startForegroundService(intent);
-        } else {
-            mContext.startService(intent);
-        }
-
-        /*mContext.startService(new Intent(mContext, TrackerService.class)
-                .setAction(TrackerService.ACTION_START_SERVICE));*/
+        mContext.startService(intent);
 
         /*mContext.bindService(new Intent(mContext, TrackerService.class), mConnection,
                 Context.BIND_AUTO_CREATE);*/

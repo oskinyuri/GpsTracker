@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">GpsTracker</string>
+    <string name="app_name">ABRIS Tracker</string>
     <string name="title_activity_login">Sign in</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Логин</string>

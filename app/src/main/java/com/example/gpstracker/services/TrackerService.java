@@ -7,7 +7,6 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.LocationManager;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -47,11 +46,10 @@ public class TrackerService extends Service {
     public static final String MESSAGE_STATUS = "MSG_STATUS";
     public static final String FILTER_STATUS_BROADCAST = "com.mirea.GpsTracker.TrackerService";
 
-    private boolean mStatus;
+    private boolean isTracking;
 
     private HandlerThread mHandlerThread;
     private Handler mHandler;
-    private LocationManager mLocationManager;
 
     private WebServiceMapper mWebServiceMapper;
     private SharedPrefManager mSharedPrefManager;
@@ -80,7 +78,6 @@ public class TrackerService extends Service {
     private final Runnable mTrackTask = new Runnable() {
         @Override
         public void run() {
-            Log.d(TAG, "runn test");
 
             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -93,7 +90,7 @@ public class TrackerService extends Service {
                     .addOnSuccessListener(mExecutor, location -> {
                         // Got last known location. In some rare situations this can be null.
                         if (location != null) {
-                            Log.d(TAG, "location");
+                            Log.d(TAG, location.toString());
 
                             Coordinates coordinates = new Coordinates(
                                     String.valueOf(location.getLongitude()),
@@ -114,7 +111,7 @@ public class TrackerService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        mStatus = false;
+        isTracking = false;
         mHandlerThread = new HandlerThread("star_tracking");
         mHandlerThread.start();
         mHandler = new Handler(mHandlerThread.getLooper());
@@ -150,33 +147,33 @@ public class TrackerService extends Service {
     }
 
     public void startTracking() {
-        if (mStatus) {
+        if (isTracking) {
             sendStatus();
             return;
         }
         startAsForeground();
         prepareTask();
         startPeriodicTask();
-        mStatus = true;
+        isTracking = true;
         sendStatus();
     }
 
     public void stopTracking() {
         stopForeground(true);
         removePeriodicTask();
-        mStatus = false;
+        isTracking = false;
         sendStatus();
     }
 
     private void sendStatus() {
         String msg;
-        if (mStatus)
+        if (isTracking)
             msg = "Сервис включен.";
         else
             msg = "Сервис выключен.";
 
         Intent intent = new Intent(FILTER_STATUS_BROADCAST);
-        intent.putExtra(ARGUMENT, mStatus);
+        intent.putExtra(ARGUMENT, isTracking);
         intent.putExtra(MESSAGE_STATUS, msg);
         sendBroadcast(intent);
     }
