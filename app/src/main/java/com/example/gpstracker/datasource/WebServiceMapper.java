@@ -73,7 +73,8 @@ public class WebServiceMapper {
             @Override
             public void onResponse(Call<AuthResp> call, Response<AuthResp> response) {
                 if (response.body() == null){
-                    callback.onFailure();
+                    //TODO узнать почему с сервера может придти пустое и создать Exception
+                    callback.onFailure(new Exception("Empty body!"));
                     return;
                 }
                 if (response.body().getError() == null) {
@@ -82,14 +83,14 @@ public class WebServiceMapper {
                     mPrefManager.saveToken(values.get(0));
                     callback.onResponse();
                 } else {
-                    callback.onFailure();
+                    callback.onFailure(new Exception(response.body().getError().toString()));
                 }
 
             }
 
             @Override
             public void onFailure(Call<AuthResp> call, Throwable t) {
-
+                callback.onFailure(t);
             }
         });
     }

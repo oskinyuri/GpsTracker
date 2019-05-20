@@ -1,19 +1,27 @@
 package com.example.gpstracker.ui;
 
 import android.content.Intent;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
+import android.widget.Toast;
 
 import com.example.gpstracker.datasource.SharedPrefManager;
 import com.example.gpstracker.datasource.WebServiceMapper;
 import com.example.gpstracker.pojo.LoginParams;
 import com.google.gson.Gson;
 
+import java.net.UnknownHostException;
+
 public class SplashActivity extends AppCompatActivity {
 
     private WebServiceMapper mWebServiceMapper;
     private SharedPrefManager mSharedPrefManager;
     private Gson mGson;
+
+    private String mLogin;
+    private String mPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,16 +34,21 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        checkSavedLoginDetails();
+        testAuthentication();
+    }
 
-        String login = mSharedPrefManager.getLogin();
-        String password = mSharedPrefManager.getPassword();
+    private void checkSavedLoginDetails() {
+        mLogin = mSharedPrefManager.getLogin();
+        mPassword = mSharedPrefManager.getPassword();
 
-        if (login.equals("") || password.equals("")) {
+        if (mLogin.equals("") || mPassword.equals("")) {
             startLoginActivity();
-            return;
         }
+    }
 
-        LoginParams loginParams = new LoginParams(login, password);
+    private void testAuthentication() {
+        LoginParams loginParams = new LoginParams(mLogin, mPassword);
         String authRequest = mGson.toJson(loginParams);
 
         mWebServiceMapper.authenticate(authRequest, new AuthenticateCallback() {
@@ -47,15 +60,15 @@ public class SplashActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure() {
+            public void onFailure(Throwable throwable) {
+                if (throwable instanceof UnknownHostException)
+                    Toast.makeText(getApplicationContext(), "No internet connection!", Toast.LENGTH_LONG).show();
                 startLoginActivity();
             }
         });
     }
 
     private void startLoginActivity() {
-        Intent intent = new Intent(getBaseContext(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+        startActivity(LoginActivity.newIntent(this));
     }
 }

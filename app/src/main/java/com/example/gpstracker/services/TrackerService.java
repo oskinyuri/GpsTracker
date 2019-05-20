@@ -12,6 +12,8 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import android.util.Log;
@@ -24,7 +26,14 @@ import com.example.gpstracker.pojo.GeoData;
 import com.example.gpstracker.ui.MainActivity;
 import com.example.gpstracker.util.NotificationUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.SettingsClient;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 
 import java.util.Objects;
@@ -45,6 +54,17 @@ public class TrackerService extends Service {
     public static final String ARGUMENT = "ARGUMENT";
     public static final String MESSAGE_STATUS = "MSG_STATUS";
     public static final String FILTER_STATUS_BROADCAST = "com.mirea.GpsTracker.TrackerService";
+
+    //TODO test
+    LocationRequest locationRequest;
+    protected void createLocationRequest() {
+        locationRequest = LocationRequest.create();
+        locationRequest.setInterval(1000 * 5);
+        locationRequest.setFastestInterval(1000 * 5);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+
 
     private boolean isTracking;
 
@@ -84,7 +104,6 @@ public class TrackerService extends Service {
                 sendStatus();
                 return;
             }
-
             FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
             fusedLocationClient.getLastLocation()
                     .addOnSuccessListener(mExecutor, location -> {
@@ -156,6 +175,26 @@ public class TrackerService extends Service {
         startPeriodicTask();
         isTracking = true;
         sendStatus();
+
+        //TODO test
+        startLocationTracking();
+    }
+
+    //TODO тест
+    private void startLocationTracking() {
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        createLocationRequest();
+        builder.addLocationRequest(locationRequest);
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+
+        task.addOnSuccessListener(locationSettingsResponse -> {
+
+        });
+
+        task.addOnFailureListener(e -> {
+
+        });
     }
 
     public void stopTracking() {

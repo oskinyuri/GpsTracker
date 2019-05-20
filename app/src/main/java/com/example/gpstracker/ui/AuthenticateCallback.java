@@ -2,5 +2,7 @@ package com.example.gpstracker.ui;
 
 public  interface AuthenticateCallback {
     void onResponse();
-    void onFailure();
+
+    //TODO add exception as parameter
+    void onFailure(Throwable throwable);
 }

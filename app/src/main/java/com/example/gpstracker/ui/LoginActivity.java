@@ -1,7 +1,10 @@
 package com.example.gpstracker.ui;
 
+import android.content.Context;
 import android.content.Intent;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,9 +22,12 @@ public class LoginActivity extends AppCompatActivity {
     private SharedPrefManager mSharedPrefManager;
     private Gson mGson;
 
-    private EditText mLogin;
-    private EditText mPassword;
+    private EditText mLoginEditText;
+    private EditText mPasswordEditText;
     private Button mSignInButton;
+
+    private String mLogin;
+    private String mPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +41,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        mLogin = findViewById(R.id.loginEditText);
-        mPassword = findViewById(R.id.passwordEditText);
+        mLoginEditText = findViewById(R.id.loginEditText);
+        mPasswordEditText = findViewById(R.id.passwordEditText);
         mSignInButton = findViewById(R.id.loginButton);
     }
 
@@ -48,40 +54,61 @@ public class LoginActivity extends AppCompatActivity {
 
     private void initListeners() {
         mSignInButton.setOnClickListener(v -> {
-
-            String login = mLogin.getText().toString();
-            String password = mPassword.getText().toString();
-
-            if (login.equals("") || password.equals("")) {
-                failAuthenticate();
+            if (!checkAuthenticationFields())
                 return;
-            }
-
-            LoginParams loginParams = new LoginParams(login,password);
-            String authRequest = mGson.toJson(loginParams);
-
-            mWebServiceMapper.authenticate(authRequest, new AuthenticateCallback() {
-                @Override
-                public void onResponse() {
-                    mSharedPrefManager.saveLogin(login);
-                    mSharedPrefManager.savePassword(password);
-                    Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                    intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(intent);
-                }
-
-                @Override
-                public void onFailure() {
-                    failAuthenticate();
-                }
-            });
+            startAuthRequest();
         });
     }
 
-    private void failAuthenticate(){
+    private boolean checkAuthenticationFields() {
+        mLogin = mLoginEditText.getText().toString();
+        mPassword = mPasswordEditText.getText().toString();
+
+        if (mLogin.equals("") || mPassword.equals("")) {
+            failAuthenticate();
+            return false;
+        } else {
+            return true;
+        }
+    }
+
+    private void failAuthenticate() {
         Toast.makeText(getBaseContext(), "Authenticate error!", Toast.LENGTH_SHORT).show();
-        mLogin.setError("Неверный логин или пароль!");
-        mPassword.setError("Неверный логин или пароль!");
+        mLoginEditText.setError("Неверный логин или пароль!");
+        mPasswordEditText.setError("Неверный логин или пароль!");
+    }
+
+    private void startAuthRequest() {
+        LoginParams loginParams = new LoginParams(mLogin, mPassword);
+        String authRequest = mGson.toJson(loginParams);
+
+        mWebServiceMapper.authenticate(authRequest, new AuthenticateCallback() {
+            @Override
+            public void onResponse() {
+                saveLoginDetails();
+                startMainActivity();
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+                failAuthenticate();
+            }
+        });
+    }
+
+    private void saveLoginDetails() {
+        mSharedPrefManager.saveLogin(mLogin);
+        mSharedPrefManager.savePassword(mPassword);
+    }
+
+    private void startMainActivity(){
+        startActivity(MainActivity.newIntent(this));
+    }
+
+    public static Intent newIntent(Context context) {
+        Intent intent = new Intent(context, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+        return intent;
     }
 
 }
