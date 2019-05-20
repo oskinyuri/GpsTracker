@@ -1,4 +1,4 @@
-package com.example.gpstracker.ui;
+package com.example.gpstracker.ui.main;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
@@ -12,6 +12,8 @@ import android.location.LocationManager;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
+
+import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.appcompat.app.AlertDialog;
 import android.widget.Toast;
@@ -22,6 +24,9 @@ import com.example.gpstracker.services.TrackerService;
 import com.google.gson.Gson;
 
 public class MainPresenter {
+
+    private static final int MY_PERMISSIONS_REQUEST = 234;
+    private static final int REQUEST_CHECK_SETTINGS = 235;
 
     private MainView mView;
     private Context mContext;
@@ -111,7 +116,7 @@ public class MainPresenter {
         if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(mContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            mView.requestPermissions();
+            requestPermissions();
 
             Toast.makeText(mContext, "Not permissions!", Toast.LENGTH_SHORT).show();
             return;
@@ -138,10 +143,30 @@ public class MainPresenter {
         Intent intent = new Intent(mContext, TrackerService.class);
         intent.setAction(TrackerService.ACTION_START_TRACKING);
         mContext.startService(intent);
-
     }
 
-    public void stopService() {
+    private void requestPermissions(){
+        ActivityCompat.requestPermissions(mView.getViewActivity(),
+                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                MY_PERMISSIONS_REQUEST);
+    }
+
+    void onPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults){
+        switch (requestCode) {
+            case MY_PERMISSIONS_REQUEST: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 1
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(mContext,"Permissions allow", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(mContext,"Permissions not allow", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    void stopService() {
 
         Message msg = Message.obtain(null, TrackerService.MSG_WHAT_STOP, 0, 0);
         /*try {
@@ -167,7 +192,7 @@ public class MainPresenter {
         alert.show();
     }
 
-    public void logout() {
+    void logout() {
         mSharedPrefManager.savePassword("");
         mSharedPrefManager.saveLogin("");
     }

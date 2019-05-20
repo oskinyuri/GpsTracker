@@ -1,4 +1,6 @@
-package com.example.gpstracker.ui;
+package com.example.gpstracker.ui.main;
+
+import android.app.Activity;
 
 public interface MainView {
 
@@ -6,6 +8,6 @@ public interface MainView {
 
     void setServiceStatus(String status);
 
-    void requestPermissions();
+    Activity getViewActivity();
 
 }

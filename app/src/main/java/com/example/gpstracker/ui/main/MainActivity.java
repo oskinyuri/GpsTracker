@@ -1,6 +1,7 @@
-package com.example.gpstracker.ui;
+package com.example.gpstracker.ui.main;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -20,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.gpstracker.R;
+import com.example.gpstracker.ui.LoginActivity;
 import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
@@ -101,27 +103,13 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
-    public void requestPermissions() {
-        ActivityCompat.requestPermissions(this,
-                new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                MY_PERMISSIONS_REQUEST);
+    public Activity getViewActivity() {
+        return this;
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSIONS_REQUEST: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 1
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
-                    Toast.makeText(this,"Permissions allow", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(this,"Permissions not allow", Toast.LENGTH_SHORT).show();
-                }
-                return;
-            }
-        }
+        mPresenter.onPermissionsResult(requestCode,permissions,grantResults);
     }
 
     @Override
