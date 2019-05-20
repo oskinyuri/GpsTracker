@@ -12,8 +12,8 @@ import android.location.LocationManager;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AlertDialog;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AlertDialog;
 import android.widget.Toast;
 
 import com.example.gpstracker.datasource.SharedPrefManager;

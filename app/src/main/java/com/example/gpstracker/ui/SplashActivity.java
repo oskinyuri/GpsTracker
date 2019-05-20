@@ -1,16 +1,13 @@
 package com.example.gpstracker.ui;
 
 import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
-import com.example.gpstracker.R;
 import com.example.gpstracker.datasource.SharedPrefManager;
 import com.example.gpstracker.datasource.WebServiceMapper;
 import com.example.gpstracker.pojo.LoginParams;
 import com.google.gson.Gson;
-
-import javax.security.auth.callback.Callback;
 
 public class SplashActivity extends AppCompatActivity {
 
