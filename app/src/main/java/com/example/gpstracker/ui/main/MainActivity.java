@@ -1,56 +1,29 @@
 package com.example.gpstracker.ui.main;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentSender;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.core.app.ActivityCompat;
-import androidx.appcompat.app.AppCompatActivity;
-
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.gpstracker.R;
 import com.example.gpstracker.ui.LoginActivity;
-import com.google.android.gms.common.api.ResolvableApiException;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements MainView {
-
-    private static final int MY_PERMISSIONS_REQUEST = 234;
-    private static final int REQUEST_CHECK_SETTINGS = 235;
     private EditText mCarNumber;
     private TextView mStatus;
     private Button mStartBtn;
     private Button mStopBtn;
 
     private MainPresenter mPresenter;
-
-    //TODO test
-    LocationRequest locationRequest;
-    protected void createLocationRequest() {
-        locationRequest = LocationRequest.create();
-        locationRequest.setInterval(1000 * 5);
-        locationRequest.setFastestInterval(1000 * 5);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +44,6 @@ public class MainActivity extends AppCompatActivity implements MainView {
     @Override
     protected void onResume() {
         super.onResume();
-        startLocationTracking();
         mPresenter.onAttach(this);
         initListeners();
     }
@@ -88,8 +60,8 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     private void initListeners() {
-        mStartBtn.setOnClickListener(v -> mPresenter.startService(mCarNumber.getText().toString()));
-        mStopBtn.setOnClickListener(v-> mPresenter.stopService());
+        mStartBtn.setOnClickListener(v -> mPresenter.onStartButtonClicked(mCarNumber.getText().toString()));
+        mStopBtn.setOnClickListener(v-> mPresenter.onStopButtonClicked());
     }
 
     @Override
@@ -131,52 +103,11 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     private void logout() {
-        mPresenter.logout();
-        Intent intent = new Intent(getBaseContext(), LoginActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        startActivity(intent);
+        mPresenter.onLogoutButtonClicked();
+        startActivity(LoginActivity.newIntent(this));
     }
 
-    //TODO тест
-    private void startLocationTracking() {
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        createLocationRequest();
-        builder.addLocationRequest(locationRequest);
-        SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
 
-        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
-            @Override
-            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
-                // All location settings are satisfied. The client can initialize
-                // location requests here.
-                // ...
-                Log.d("Location test", "success");
-            }
-        });
-
-        task.addOnFailureListener(this, new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                if (e instanceof ResolvableApiException) {
-                    // Location settings are not satisfied, but this can be fixed
-                    // by showing the user a dialog.
-                    Log.d("Location test", e.getLocalizedMessage());
-
-                    try {
-                        // Show the dialog by calling startResolutionForResult(),
-                        // and check the result in onActivityResult().
-                        ResolvableApiException resolvable = (ResolvableApiException) e;
-                        resolvable.startResolutionForResult(MainActivity.this,
-                                REQUEST_CHECK_SETTINGS);
-                    } catch (IntentSender.SendIntentException sendEx) {
-                        // Ignore the error.
-                        Log.d("Location test", sendEx.getLocalizedMessage());
-                    }
-                }
-            }
-        });
-    }
 
     public static Intent newIntent(Context context){
         Intent intent = new Intent(context, MainActivity.class);

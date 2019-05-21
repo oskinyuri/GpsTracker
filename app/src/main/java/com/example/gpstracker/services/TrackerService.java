@@ -1,21 +1,16 @@
 package com.example.gpstracker.services;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.os.Binder;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
-
-import androidx.core.app.ActivityCompat;
-import androidx.core.app.NotificationCompat;
-import android.util.Log;
 
 import com.example.gpstracker.R;
 import com.example.gpstracker.datasource.SharedPrefManager;
@@ -25,206 +20,107 @@ import com.example.gpstracker.pojo.GeoData;
 import com.example.gpstracker.ui.main.MainActivity;
 import com.example.gpstracker.util.NotificationUtils;
 import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.LocationSettingsResponse;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.Task;
 import com.google.gson.Gson;
 
-import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
 
 public class TrackerService extends Service {
-    private static final String TAG = "TrackerService";
 
-    public static final int MSG_WHAT_START = 234;
-    public static final int MSG_WHAT_STOP = 253;
+    private final IBinder mBinder = new LocalBinder();
+    private LocationRequest mLocationRequest;
+    private boolean isTracking = false;
 
-    public static final String ACTION_START_SERVICE = "ACTION_START_SERVICE";
-
-    public static final String ACTION_START_TRACKING = "ACTION_START_TRACKING";
-    public static final String ACTION_STOP_TRACKING = "ACTION_STOP_TRACKING";
-
-    public static final String ARGUMENT = "ARGUMENT";
-    public static final String MESSAGE_STATUS = "MSG_STATUS";
-    public static final String FILTER_STATUS_BROADCAST = "com.mirea.GpsTracker.TrackerService";
-
-    //TODO test
-    LocationRequest locationRequest;
-    protected void createLocationRequest() {
-        locationRequest = LocationRequest.create();
-        locationRequest.setInterval(1000 * 5);
-        locationRequest.setFastestInterval(1000 * 5);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-
-
-    private boolean isTracking;
-
-    private HandlerThread mHandlerThread;
     private Handler mHandler;
 
     private WebServiceMapper mWebServiceMapper;
     private SharedPrefManager mSharedPrefManager;
     private Gson mGson;
 
-    private Executor mExecutor;
-    private Messenger mMessenger;
+    private LocationCallback mLocationCallback;
+    private FusedLocationProviderClient mFusedLocationClient;
 
-    @SuppressLint("HandlerLeak")
-    private Handler incomingHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_WHAT_START:
-                    startTracking();
-                    break;
-                case MSG_WHAT_STOP:
-                    stopTracking();
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
-        }
-    };
-
-    private final Runnable mTrackTask = new Runnable() {
-        @Override
-        public void run() {
-
-            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                    && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                sendStatus();
-                return;
-            }
-            FusedLocationProviderClient fusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
-            fusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(mExecutor, location -> {
-                        // Got last known location. In some rare situations this can be null.
-                        if (location != null) {
-                            Log.d(TAG, location.toString());
-
-                            Coordinates coordinates = new Coordinates(
-                                    String.valueOf(location.getLongitude()),
-                                    String.valueOf(location.getLatitude()));
-
-                            GeoData geoData = new GeoData(coordinates, mSharedPrefManager.getCarNumber());
-                            final String geoPost = mGson.toJson(geoData);
-
-                            mWebServiceMapper.updateGps(geoPost);
-
-                        }
-                    });
-
-            mHandler.postDelayed(this, 1000 * 60);
-        }
-    };
+    private Runnable mLocationUpdateTask;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        isTracking = false;
-        mHandlerThread = new HandlerThread("star_tracking");
-        mHandlerThread.start();
-        mHandler = new Handler(mHandlerThread.getLooper());
-        mExecutor = Executors.newSingleThreadExecutor();
+        HandlerThread handlerThread = new HandlerThread("star_tracking");
+        handlerThread.start();
+        mHandler = new Handler(handlerThread.getLooper());
+
         mSharedPrefManager = new SharedPrefManager(this);
         mWebServiceMapper = new WebServiceMapper(this);
         mGson = new Gson();
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            String action = intent.getAction();
-
-            switch (Objects.requireNonNull(action)) {
-                case ACTION_START_SERVICE:
-                    sendStatus();
-                    break;
-                case ACTION_START_TRACKING:
-                    startTracking();
-                    break;
-                case ACTION_STOP_TRACKING:
-                    stopTracking();
-                    break;
-            }
-        }
-        return START_STICKY;
+    public IBinder onBind(Intent intent) {
+        return mBinder;
     }
 
-
-    public void removePeriodicTask() {
-        mHandler.removeCallbacks(mTrackTask);
-    }
-
-    public void startTracking() {
-        if (isTracking) {
-            sendStatus();
+    public void startTracking(LocationRequest locationRequest) {
+        if (isTracking)
             return;
-        }
-        startAsForeground();
-        prepareTask();
-        startPeriodicTask();
-        isTracking = true;
-        sendStatus();
 
-        //TODO test
-        startLocationTracking();
+        mLocationRequest = locationRequest;
+        isTracking = true;
+
+        startAsForeground();
+        createLocationUpdateTask();
+        mHandler.post(mLocationUpdateTask);
     }
 
-    //TODO тест
-    private void startLocationTracking() {
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        createLocationRequest();
-        builder.addLocationRequest(locationRequest);
-        SettingsClient client = LocationServices.getSettingsClient(this);
-        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+    private void createLocationUpdateTask() {
+        mLocationUpdateTask = () -> {
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
 
-        task.addOnSuccessListener(locationSettingsResponse -> {
+            createLocationCallback();
 
-        });
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest, mLocationCallback, null);
+        };
+    }
 
-        task.addOnFailureListener(e -> {
+    private void createLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if (locationResult == null) {
+                    return;
+                }
+                for (Location location : locationResult.getLocations()) {
 
-        });
+                    Coordinates coordinates = new Coordinates(
+                            String.valueOf(location.getLongitude()),
+                            String.valueOf(location.getLatitude()));
+
+                    GeoData geoData = new GeoData(coordinates, mSharedPrefManager.getCarNumber());
+                    final String geoPost = mGson.toJson(geoData);
+
+                    mWebServiceMapper.updateGps(geoPost);
+                }
+            }
+        };
     }
 
     public void stopTracking() {
-        stopForeground(true);
-        removePeriodicTask();
+
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        mHandler.removeCallbacks(mLocationUpdateTask);
         isTracking = false;
-        sendStatus();
+        stopForeground(true);
     }
 
-    private void sendStatus() {
-        String msg;
-        if (isTracking)
-            msg = "Сервис включен.";
-        else
-            msg = "Сервис выключен.";
-
-        Intent intent = new Intent(FILTER_STATUS_BROADCAST);
-        intent.putExtra(ARGUMENT, isTracking);
-        intent.putExtra(MESSAGE_STATUS, msg);
-        sendBroadcast(intent);
-    }
-
-    private void prepareTask() {
-    }
-
-    private void startPeriodicTask() {
-        mHandler.post(mTrackTask);
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        mMessenger = new Messenger(incomingHandler);
-        return mMessenger.getBinder();
+    public boolean getTrackingStatus() {
+        return isTracking;
     }
 
     private void startAsForeground() {
@@ -269,5 +165,11 @@ public class TrackerService extends Service {
 
         // Start foreground service.
         startForeground(1, notification);
+    }
+
+    public class LocalBinder extends Binder {
+        public TrackerService getService() {
+            return TrackerService.this;
+        }
     }
 }
