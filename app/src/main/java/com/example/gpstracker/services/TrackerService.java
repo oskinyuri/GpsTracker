@@ -156,7 +156,7 @@ public class TrackerService extends Service {
         builder.setContentText("Данные передаются на сервер.");
 
         int requestID = (int) System.currentTimeMillis();
-        Intent contentIntent = new Intent(this, MainActivity.class);
+        Intent contentIntent = MainActivity.newIntent(this);
         //contentIntent.setAction(Intent.ACTION_VIEW);
         PendingIntent pendingContentIntent = PendingIntent.getActivity(this, requestID, contentIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         builder.setContentIntent(pendingContentIntent);
