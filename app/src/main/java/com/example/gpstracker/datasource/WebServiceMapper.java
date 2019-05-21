@@ -73,7 +73,7 @@ public class WebServiceMapper {
             @Override
             public void onResponse(Call<AuthResp> call, Response<AuthResp> response) {
                 if (response.body() == null){
-                    //TODO узнать почему с сервера может придти пустое и создать Exception
+                    //TODO узнать почему с сервера может придти пустое body
                     callback.onFailure(new Exception("Empty body!"));
                     return;
                 }
