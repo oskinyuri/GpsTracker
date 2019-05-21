@@ -35,16 +35,20 @@ public class SplashActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        checkSavedLoginDetails();
-        testAuthentication();
+        if (checkSavedLoginDetails())
+            testAuthentication();
+        else
+            startLoginActivity();
     }
 
-    private void checkSavedLoginDetails() {
+    private boolean checkSavedLoginDetails() {
         mLogin = mSharedPrefManager.getLogin();
         mPassword = mSharedPrefManager.getPassword();
 
         if (mLogin.equals("") || mPassword.equals("")) {
-            startLoginActivity();
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -55,9 +59,7 @@ public class SplashActivity extends AppCompatActivity {
         mWebServiceMapper.authenticate(authRequest, new AuthenticateCallback() {
             @Override
             public void onResponse() {
-                Intent intent = new Intent(getBaseContext(), MainActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
+                startMainActivity();
             }
 
             @Override
@@ -71,5 +73,9 @@ public class SplashActivity extends AppCompatActivity {
 
     private void startLoginActivity() {
         startActivity(LoginActivity.newIntent(this));
+    }
+
+    private void startMainActivity() {
+        startActivity(MainActivity.newIntent(this));
     }
 }

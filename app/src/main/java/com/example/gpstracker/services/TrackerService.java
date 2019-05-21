@@ -112,6 +112,8 @@ public class TrackerService extends Service {
     }
 
     public void stopTracking() {
+        if (!isTracking)
+            return;
 
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
         mHandler.removeCallbacks(mLocationUpdateTask);

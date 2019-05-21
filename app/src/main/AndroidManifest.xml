@@ -37,7 +37,8 @@
         </activity>
         <activity
             android:name=".ui.main.MainActivity"
-            android:launchMode="singleTop">
+            >
+        <!--android:launchMode="singleTop"-->
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
