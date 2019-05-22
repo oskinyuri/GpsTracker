@@ -15,16 +15,25 @@ import android.os.IBinder;
 import com.example.gpstracker.R;
 import com.example.gpstracker.datasource.SharedPrefManager;
 import com.example.gpstracker.datasource.WebServiceMapper;
-import com.example.gpstracker.pojo.Coordinates;
-import com.example.gpstracker.pojo.GeoData;
+import com.example.gpstracker.pojo.updateLocationRequest.Coordinates;
+import com.example.gpstracker.pojo.updateLocationRequest.GeoData;
+import com.example.gpstracker.pojo.massegeRequest.MessageRequest;
+import com.example.gpstracker.pojo.massegeRequest.Operand;
+import com.example.gpstracker.pojo.massegeRequest.Operands;
+import com.example.gpstracker.pojo.massegeRequest.Predicate;
+import com.example.gpstracker.util.callbacks.UpdateLocationCallback;
 import com.example.gpstracker.ui.main.MainActivity;
 import com.example.gpstracker.util.NotificationUtils;
+import com.example.gpstracker.util.callbacks.UpdateMessageCallback;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.gson.Gson;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
@@ -105,10 +114,46 @@ public class TrackerService extends Service {
                     GeoData geoData = new GeoData(coordinates, mSharedPrefManager.getCarNumber());
                     final String geoPost = mGson.toJson(geoData);
 
-                    mWebServiceMapper.updateGps(geoPost);
+                    mWebServiceMapper.updateGps(geoPost, new UpdateLocationCallback() {
+                        @Override
+                        public void onResponse() {
+                            requestNewMessage();
+                        }
+
+                        @Override
+                        public void onFailure(Throwable throwable) {
+
+                        }
+                    });
                 }
             }
         };
+    }
+
+    /**
+     * Метод создания запроса для получения нового сообщения.
+     */
+    private void requestNewMessage() {
+        String carNumber = mSharedPrefManager.getCarNumber();
+        Operand operand = new Operand(carNumber);
+        Operands operands = new Operands(operand);
+        List<Operands> operandsList = new ArrayList<>();
+        operandsList.add(operands);
+        Predicate predicate = new Predicate(operandsList);
+        MessageRequest messageRequest = new MessageRequest(predicate);
+        String msgRequest = mGson.toJson(messageRequest);
+        mWebServiceMapper.updateMessage(msgRequest, new UpdateMessageCallback() {
+            @Override
+            public void onResponse(String message) {
+                String s = message;
+                //TODO сделать broadcast который посылает это на UI
+            }
+
+            @Override
+            public void onFailure(Throwable throwable) {
+
+            }
+        });
     }
 
     public void stopTracking() {

@@ -1,4 +1,4 @@
-package com.example.gpstracker.ui;
+package com.example.gpstracker.util.callbacks;
 
 public interface AuthenticateCallback {
     void onResponse();

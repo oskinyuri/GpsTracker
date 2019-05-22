@@ -1,4 +1,4 @@
-package com.example.gpstracker.pojo;
+package com.example.gpstracker.pojo.updateLocationRequest;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

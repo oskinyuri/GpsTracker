@@ -178,5 +178,12 @@ public class MainPresenter {
             mBound = false;
         }
     }
+
+    private void updateMessage(){
+        //TODO implement method
+
+    }
+
+    //TODO add broadcastReceiver
 }
 

@@ -1,7 +1,5 @@
 package com.example.gpstracker.ui;
 
-import android.content.Intent;
-
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
@@ -9,8 +7,9 @@ import android.widget.Toast;
 
 import com.example.gpstracker.datasource.SharedPrefManager;
 import com.example.gpstracker.datasource.WebServiceMapper;
-import com.example.gpstracker.pojo.LoginParams;
+import com.example.gpstracker.pojo.updateLocationRequest.LoginParams;
 import com.example.gpstracker.ui.main.MainActivity;
+import com.example.gpstracker.util.callbacks.AuthenticateCallback;
 import com.google.gson.Gson;
 
 import java.net.UnknownHostException;

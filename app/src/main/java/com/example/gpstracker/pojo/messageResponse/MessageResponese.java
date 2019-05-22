@@ -1,14 +1,13 @@
-package com.example.gpstracker.pojo;
+package com.example.gpstracker.pojo.messageResponse;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import java.util.List;
 /**
  * Awesome Pojo Generator
  * */
-public class AuthResp{
+public class MessageResponese{
   @SerializedName("result")
   @Expose
-  private List<Result> result;
+  private Result result;
   @SerializedName("usename")
   @Expose
   private String usename;
@@ -18,10 +17,10 @@ public class AuthResp{
   @SerializedName("error")
   @Expose
   private Object error;
-  public void setResult(List<Result> result){
+  public void setResult(Result result){
    this.result=result;
   }
-  public List<Result> getResult(){
+  public Result getResult(){
    return result;
   }
   public void setUsename(String usename){
