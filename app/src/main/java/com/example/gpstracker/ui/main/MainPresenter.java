@@ -9,7 +9,11 @@ import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.IBinder;
+import android.os.Vibrator;
 import android.widget.Toast;
 
 import com.example.gpstracker.datasource.SharedPrefManager;
@@ -124,9 +128,22 @@ public class MainPresenter {
 
     private void updateAlarmButtonUI(boolean isAlarm) {
         if (isAlarm) {
-            mView.fromAlert();
-        } else {
             mView.toAlert();
+            vibrateAndSoundOnClick();
+        } else {
+            mView.fromAlert();
+        }
+    }
+
+    private void vibrateAndSoundOnClick() {
+        try {
+            Vibrator vibe = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
+            Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            Ringtone r = RingtoneManager.getRingtone(mContext, notification);
+            r.play();
+            vibe.vibrate(100);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
