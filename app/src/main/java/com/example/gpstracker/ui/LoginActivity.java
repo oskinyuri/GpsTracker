@@ -43,9 +43,9 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void initViews() {
-        mLoginEditText = findViewById(R.id.loginEditText);
-        mPasswordEditText = findViewById(R.id.passwordEditText);
-        mSignInButton = findViewById(R.id.loginButton);
+        mLoginEditText = findViewById(R.id.login_login_text_input_edit_text);
+        mPasswordEditText = findViewById(R.id.login_password_text_input_edit_text);
+        mSignInButton = findViewById(R.id.login_sign_in_button);
     }
 
     @Override

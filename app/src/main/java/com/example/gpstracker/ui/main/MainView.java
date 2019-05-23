@@ -10,8 +10,23 @@ public interface MainView {
 
     void setMessage(String message);
 
-    void updateButtonUI(int buttonColor);
+    void toAlert();
+
+    void fromAlert();
 
     Activity getViewActivity();
 
+    void setAlarmButtonEnabled(boolean enabled);
+
+    void setStartButtonEnabled(boolean enabled);
+
+    void setStopButtonEnabled(boolean enabled);
+
+    void setImageTrackingIsOff();
+
+    void setImageTrackingIsOn();
+
+    void setCarNumberEnabled(boolean enabled);
+
+    void setAlertButtonVisible(boolean visible);
 }

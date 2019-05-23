@@ -14,4 +14,15 @@
         completions."
     </string>
     <string name="exit">Exit</string>
+    <string name="action_help">Помощь</string>
+    <string name="action_abris_link">Ссылка на Abris или что-то</string>
+    <string name="content_description_abris_logo">Логотип Abris</string>
+    <string name="action_stop">Стоп</string>
+    <string name="action_start">Старт</string>
+    <string name="hint_car_number">Номер машины</string>
+    <string name="caption_tracking_on">Отслеживание включено</string>
+    <string name="content_description_tracking_status">Состояние отслеживания</string>
+    <string name="caption_message">Сообщение</string>
+    <string name="caption_no_messages">Нет новых сообщений</string>
+    <string name="action_alarm">Тревога</string>
 </resources>

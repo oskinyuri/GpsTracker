@@ -1,15 +1,20 @@
 package com.example.gpstracker.ui.main;
 
+import android.animation.ArgbEvaluator;
+import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.gpstracker.R;
@@ -17,8 +22,11 @@ import com.example.gpstracker.ui.LoginActivity;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 public class MainActivity extends AppCompatActivity implements MainView {
+
+    private ConstraintLayout mRootConstraintLayout;
 
     private EditText mCarNumber;
     private TextView mStatusTextView;
@@ -26,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
     private Button mStartButton;
     private Button mStopButton;
     private Button mAlarmButton;
+    private ImageView mTrackingStatusImageView;
 
     private MainPresenter mPresenter;
 
@@ -41,12 +50,14 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     private void initViews() {
-        mCarNumber = findViewById(R.id.carNumberEditText);
-        mStartButton = findViewById(R.id.startBtn);
-        mStopButton = findViewById(R.id.stopBtn);
-        mStatusTextView = findViewById(R.id.serviceStatusTV);
+        mRootConstraintLayout = findViewById(R.id.main_root_constraint_layout);
+        mCarNumber = findViewById(R.id.main_service_car_number_text_input_edit_text);
+        mStartButton = findViewById(R.id.main_service_start_button);
+        mStopButton = findViewById(R.id.main_service_stop_button);
+        mStatusTextView = findViewById(R.id.main_service_tracking_status_text_view);
         mMessageTextView = findViewById(R.id.mainMessageTextView);
         mAlarmButton = findViewById(R.id.mainAlarmButton);
+        mTrackingStatusImageView = findViewById(R.id.main_service_tracking_status_image_view);
     }
 
     @Override
@@ -73,6 +84,24 @@ public class MainActivity extends AppCompatActivity implements MainView {
         mAlarmButton.setOnClickListener(v -> mPresenter.onAlarmButtonClicked());
     }
 
+    private void animateToAlert() {
+        int colorFrom = ((ColorDrawable) mRootConstraintLayout.getBackground()).getColor();
+        int colorTo = getResources().getColor(R.color.colorAlert);
+        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
+        colorAnimation.setDuration(250);
+        colorAnimation.addUpdateListener(animator -> mRootConstraintLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+        colorAnimation.start();
+    }
+
+    private void animateFromAlert() {
+        int colorFrom = ((ColorDrawable) mRootConstraintLayout.getBackground()).getColor();
+        int colorTo = getResources().getColor(R.color.colorPrimary);
+        ValueAnimator colorAnimation = ValueAnimator.ofObject(new ArgbEvaluator(), colorFrom, colorTo);
+        colorAnimation.setDuration(250);
+        colorAnimation.addUpdateListener(animator -> mRootConstraintLayout.setBackgroundColor((int) animator.getAnimatedValue()));
+        colorAnimation.start();
+    }
+
     @Override
     public void setCarNumber(String carNumber) {
         mCarNumber.setText(carNumber);
@@ -89,13 +118,55 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     @Override
-    public void updateButtonUI(int buttonColor) {
-        mAlarmButton.setBackgroundTintList(getResources().getColorStateList(buttonColor));
+    public void toAlert() {
+        animateToAlert();
+        mAlarmButton.setBackgroundColor(getResources().getColor(R.color.colorPrimaryDark));
+    }
+
+    @Override
+    public void fromAlert() {
+        animateFromAlert();
+        mAlarmButton.setBackgroundColor(getResources().getColor(R.color.colorAlert));
     }
 
     @Override
     public Activity getViewActivity() {
         return this;
+    }
+
+    @Override
+    public void setAlarmButtonEnabled(boolean enabled) {
+        mAlarmButton.setEnabled(enabled);
+    }
+
+    @Override
+    public void setStartButtonEnabled(boolean enabled) {
+        mStartButton.setEnabled(enabled);
+    }
+
+    @Override
+    public void setStopButtonEnabled(boolean enabled) {
+        mStopButton.setEnabled(enabled);
+    }
+
+    @Override
+    public void setImageTrackingIsOff() {
+        mTrackingStatusImageView.setImageDrawable(getDrawable(R.drawable.ic_tracking_off));
+    }
+
+    @Override
+    public void setImageTrackingIsOn() {
+        mTrackingStatusImageView.setImageDrawable(getDrawable(R.drawable.ic_tracking_on));
+    }
+
+    @Override
+    public void setCarNumberEnabled(boolean enabled) {
+        mCarNumber.setEnabled(enabled);
+    }
+
+    @Override
+    public void setAlertButtonVisible(boolean visible) {
+        mAlarmButton.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
     }
 
     @Override

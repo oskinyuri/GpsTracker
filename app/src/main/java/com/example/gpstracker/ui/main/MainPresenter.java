@@ -124,9 +124,9 @@ public class MainPresenter {
 
     private void updateAlarmButtonUI(boolean isAlarm) {
         if (isAlarm) {
-            mView.updateButtonUI(android.R.color.holo_red_dark);
+            mView.fromAlert();
         } else {
-            mView.updateButtonUI(android.R.color.holo_red_light);
+            mView.toAlert();
         }
     }
 
@@ -142,10 +142,18 @@ public class MainPresenter {
             return;
 
         if (status) {
-            mView.setServiceStatus("Включен");
+            mView.setServiceStatus("Выполняется отслеживание");
+            mView.setImageTrackingIsOn();
         } else {
-            mView.setServiceStatus("Выключен");
+            mView.setServiceStatus("Отслеживание выключено");
+            mView.setImageTrackingIsOff();
+            mView.fromAlert();
         }
+        mView.setCarNumberEnabled(!status);
+        mView.setStartButtonEnabled(!status);
+        mView.setStopButtonEnabled(status);
+        mView.setAlarmButtonEnabled(status);
+        mView.setAlertButtonVisible(status);
     }
 
     private void startLocationTracking() {
