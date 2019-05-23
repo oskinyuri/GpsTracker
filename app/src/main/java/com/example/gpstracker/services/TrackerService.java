@@ -15,12 +15,13 @@ import android.os.IBinder;
 import com.example.gpstracker.R;
 import com.example.gpstracker.datasource.SharedPrefManager;
 import com.example.gpstracker.datasource.WebServiceMapper;
-import com.example.gpstracker.pojo.updateLocationRequest.Coordinates;
+import com.example.gpstracker.pojo.updateLocationRequest.Fields;
 import com.example.gpstracker.pojo.updateLocationRequest.GeoData;
 import com.example.gpstracker.pojo.massegeRequest.MessageRequest;
 import com.example.gpstracker.pojo.massegeRequest.Operand;
 import com.example.gpstracker.pojo.massegeRequest.Operands;
 import com.example.gpstracker.pojo.massegeRequest.Predicate;
+import com.example.gpstracker.ui.main.MainPresenter;
 import com.example.gpstracker.util.callbacks.UpdateLocationCallback;
 import com.example.gpstracker.ui.main.MainActivity;
 import com.example.gpstracker.util.NotificationUtils;
@@ -42,7 +43,9 @@ public class TrackerService extends Service {
 
     private final IBinder mBinder = new LocalBinder();
     private LocationRequest mLocationRequest;
+
     private boolean isTracking = false;
+    private boolean isAlarm = false;
 
     private Handler mHandler;
 
@@ -84,6 +87,24 @@ public class TrackerService extends Service {
         mHandler.post(mLocationUpdateTask);
     }
 
+    public void stopTracking() {
+        if (!isTracking)
+            return;
+
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        mHandler.removeCallbacks(mLocationUpdateTask);
+        isTracking = false;
+        stopForeground(true);
+    }
+
+    public boolean changeAlarm(){
+        if (!isTracking)
+            return false;
+
+        isAlarm = (!isAlarm);
+        return isAlarm;
+    }
+
     private void createLocationUpdateTask() {
         mLocationUpdateTask = () -> {
             if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -107,11 +128,13 @@ public class TrackerService extends Service {
                 }
                 for (Location location : locationResult.getLocations()) {
 
-                    Coordinates coordinates = new Coordinates(
-                            String.valueOf(location.getLongitude()),
-                            String.valueOf(location.getLatitude()));
+                    String alarm = getAlarmAsString();
+                    Fields fields = new Fields(
+                            location.getLongitude(),
+                            location.getLatitude(),
+                            alarm);
 
-                    GeoData geoData = new GeoData(coordinates, mSharedPrefManager.getCarNumber());
+                    GeoData geoData = new GeoData(fields, mSharedPrefManager.getCarNumber());
                     final String geoPost = mGson.toJson(geoData);
 
                     mWebServiceMapper.updateGps(geoPost, new UpdateLocationCallback() {
@@ -130,6 +153,12 @@ public class TrackerService extends Service {
         };
     }
 
+    private String getAlarmAsString(){
+        if (isAlarm)
+            return "t";
+        else return "";
+    }
+
     /**
      * Метод создания запроса для получения нового сообщения.
      */
@@ -145,8 +174,10 @@ public class TrackerService extends Service {
         mWebServiceMapper.updateMessage(msgRequest, new UpdateMessageCallback() {
             @Override
             public void onResponse(String message) {
-                String s = message;
-                //TODO сделать broadcast который посылает это на UI
+                Intent intent = new Intent();
+                intent.setAction(MainPresenter.ACTION_UPDATE_MESSAGE);
+                intent.putExtra(MainPresenter.EXTRA_NEW_MESSAGE, message);
+                sendBroadcast(intent);
             }
 
             @Override
@@ -154,16 +185,6 @@ public class TrackerService extends Service {
 
             }
         });
-    }
-
-    public void stopTracking() {
-        if (!isTracking)
-            return;
-
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-        mHandler.removeCallbacks(mLocationUpdateTask);
-        isTracking = false;
-        stopForeground(true);
     }
 
     public boolean getTrackingStatus() {

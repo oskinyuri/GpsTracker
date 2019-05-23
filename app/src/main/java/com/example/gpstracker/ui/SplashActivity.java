@@ -44,11 +44,7 @@ public class SplashActivity extends AppCompatActivity {
         mLogin = mSharedPrefManager.getLogin();
         mPassword = mSharedPrefManager.getPassword();
 
-        if (mLogin.equals("") || mPassword.equals("")) {
-            return false;
-        } else {
-            return true;
-        }
+        return !mLogin.equals("") && !mPassword.equals("");
     }
 
     private void testAuthentication() {

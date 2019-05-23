@@ -8,6 +8,10 @@ public interface MainView {
 
     void setServiceStatus(String status);
 
+    void setMessage(String message);
+
+    void updateButtonUI(int buttonColor);
+
     Activity getViewActivity();
 
 }

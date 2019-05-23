@@ -38,14 +38,9 @@ public class WebServiceMapper {
         mPrefManager = new SharedPrefManager(mContext);
 
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-// set your desired log level
         logging.setLevel(HttpLoggingInterceptor.Level.HEADERS);
-
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-// add your other interceptors …
-
-// add logging as last interceptor
-        httpClient.addInterceptor(logging);  // <-- this is the important line!
+        httpClient.addInterceptor(logging);
 
         Gson gson = new GsonBuilder()
                 .create();

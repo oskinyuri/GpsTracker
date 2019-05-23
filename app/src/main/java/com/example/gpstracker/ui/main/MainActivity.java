@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -18,10 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity extends AppCompatActivity implements MainView {
+
     private EditText mCarNumber;
-    private TextView mStatus;
-    private Button mStartBtn;
-    private Button mStopBtn;
+    private TextView mStatusTextView;
+    private TextView mMessageTextView;
+    private Button mStartButton;
+    private Button mStopButton;
+    private Button mAlarmButton;
 
     private MainPresenter mPresenter;
 
@@ -29,6 +33,8 @@ public class MainActivity extends AppCompatActivity implements MainView {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         initViews();
 
         mPresenter = new MainPresenter(this);
@@ -36,9 +42,11 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     private void initViews() {
         mCarNumber = findViewById(R.id.carNumberEditText);
-        mStartBtn = findViewById(R.id.startBtn);
-        mStopBtn = findViewById(R.id.stopBtn);
-        mStatus = findViewById(R.id.serviceStatusTV);
+        mStartButton = findViewById(R.id.startBtn);
+        mStopButton = findViewById(R.id.stopBtn);
+        mStatusTextView = findViewById(R.id.serviceStatusTV);
+        mMessageTextView = findViewById(R.id.mainMessageTextView);
+        mAlarmButton = findViewById(R.id.mainAlarmButton);
     }
 
     @Override
@@ -60,8 +68,9 @@ public class MainActivity extends AppCompatActivity implements MainView {
     }
 
     private void initListeners() {
-        mStartBtn.setOnClickListener(v -> mPresenter.onStartButtonClicked(mCarNumber.getText().toString()));
-        mStopBtn.setOnClickListener(v-> mPresenter.onStopButtonClicked());
+        mStartButton.setOnClickListener(v -> mPresenter.onStartButtonClicked(mCarNumber.getText().toString()));
+        mStopButton.setOnClickListener(v -> mPresenter.onStopButtonClicked());
+        mAlarmButton.setOnClickListener(v -> mPresenter.onAlarmButtonClicked());
     }
 
     @Override
@@ -71,7 +80,17 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void setServiceStatus(String status) {
-        mStatus.setText(status);
+        mStatusTextView.setText(status);
+    }
+
+    @Override
+    public void setMessage(String message) {
+        mMessageTextView.setText(message);
+    }
+
+    @Override
+    public void updateButtonUI(int buttonColor) {
+        mAlarmButton.setBackgroundTintList(getResources().getColorStateList(buttonColor));
     }
 
     @Override
@@ -81,7 +100,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        mPresenter.onPermissionsResult(requestCode,permissions,grantResults);
+        mPresenter.onPermissionsResult(requestCode, permissions, grantResults);
     }
 
     @Override
@@ -107,9 +126,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
         startActivity(LoginActivity.newIntent(this));
     }
 
-
-
-    public static Intent newIntent(Context context){
+    public static Intent newIntent(Context context) {
         Intent intent = new Intent(context, MainActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
         return intent;

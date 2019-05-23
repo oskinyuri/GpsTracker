@@ -15,7 +15,7 @@ public class GeoData {
     private String schemaName;
     @SerializedName("fields")
     @Expose
-    private Coordinates fields;
+    private Fields fields;
     @SerializedName("value")
     @Expose
     private String value;
@@ -23,7 +23,7 @@ public class GeoData {
     @Expose
     private String key;
 
-    public GeoData(Coordinates fields, String carNumber) {
+    public GeoData(Fields fields, String carNumber) {
         this.fields = fields;
         value = carNumber;
 
@@ -48,11 +48,11 @@ public class GeoData {
         return schemaName;
     }
 
-    public void setFields(Coordinates fields) {
+    public void setFields(Fields fields) {
         this.fields = fields;
     }
 
-    public Coordinates getFields() {
+    public Fields getFields() {
         return fields;
     }
 

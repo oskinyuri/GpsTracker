@@ -1,9 +1,11 @@
 package com.example.gpstracker.ui.main;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
@@ -25,6 +27,9 @@ import androidx.core.app.ActivityCompat;
 
 public class MainPresenter {
 
+    public static final String ACTION_UPDATE_MESSAGE = "ACTION_UPDATE_MESSAGE ";
+    public static final String EXTRA_NEW_MESSAGE = "EXTRA_NEW_MESSAGE";
+
     private static final int MY_PERMISSIONS_REQUEST = 234;
     private static final int REQUEST_CHECK_SETTINGS = 235;
 
@@ -39,14 +44,20 @@ public class MainPresenter {
 
     private LocationRequest mLocationRequest;
 
+    private BroadcastReceiver mMessageReceiver;
+    private IntentFilter mMessageIntentFilter;
+
     MainPresenter(Context context) {
         mContext = context;
         mSharedPrefManager = new SharedPrefManager(mContext);
-
+        createMessageReceiver();
     }
 
     void onAttach(MainView mView) {
         this.mView = mView;
+        if (mView == null)
+            return;
+
         checkPermissions();
         mView.setCarNumber(mSharedPrefManager.getCarNumber());
 
@@ -55,6 +66,7 @@ public class MainPresenter {
         createServiceConnection();
         mContext.startService(intent);
         mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        registerMessageReceiver();
     }
 
     private void createServiceConnection() {
@@ -103,9 +115,24 @@ public class MainPresenter {
         onStopButtonClicked();
     }
 
+    void onAlarmButtonClicked() {
+        if (mBound) {
+            boolean isAlarm = mService.changeAlarm();
+            updateAlarmButtonUI(isAlarm);
+        }
+    }
+
+    private void updateAlarmButtonUI(boolean isAlarm) {
+        if (isAlarm) {
+            mView.updateButtonUI(android.R.color.holo_red_dark);
+        } else {
+            mView.updateButtonUI(android.R.color.holo_red_light);
+        }
+    }
+
     private void createLocationRequest() {
         mLocationRequest = LocationRequest.create();
-        mLocationRequest.setInterval(1000 * 60);
+        mLocationRequest.setInterval(1000 * 20);
         mLocationRequest.setFastestInterval(1000 * 60);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
@@ -167,23 +194,39 @@ public class MainPresenter {
         }
     }
 
-    public String getLastCarNumber() {
-        return mSharedPrefManager.getCarNumber();
+    private void updateMessage(String message) {
+        if (mView == null)
+            return;
+        mView.setMessage(message);
+    }
+
+    private void createMessageReceiver() {
+        mMessageReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                updateMessage(intent.getStringExtra(EXTRA_NEW_MESSAGE));
+            }
+        };
+
+        mMessageIntentFilter = new IntentFilter();
+        mMessageIntentFilter.addAction(ACTION_UPDATE_MESSAGE);
+    }
+
+    private void registerMessageReceiver() {
+        mContext.registerReceiver(mMessageReceiver, mMessageIntentFilter);
+    }
+
+    private void unregisterMessageReceiver() {
+        mContext.unregisterReceiver(mMessageReceiver);
     }
 
     void onDetach() {
         mView = null;
+        unregisterMessageReceiver();
         if (mBound) {
             mContext.unbindService(mConnection);
             mBound = false;
         }
     }
-
-    private void updateMessage(){
-        //TODO implement method
-
-    }
-
-    //TODO add broadcastReceiver
 }
 
