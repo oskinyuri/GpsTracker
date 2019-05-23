@@ -133,7 +133,7 @@ public class MainPresenter {
     private void createLocationRequest() {
         mLocationRequest = LocationRequest.create();
         mLocationRequest.setInterval(1000 * 20);
-        mLocationRequest.setFastestInterval(1000 * 60);
+        mLocationRequest.setFastestInterval(1000 * 20);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
