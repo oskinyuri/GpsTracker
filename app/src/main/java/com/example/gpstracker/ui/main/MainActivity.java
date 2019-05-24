@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements MainView {
         mStartButton = findViewById(R.id.main_service_start_button);
         mStopButton = findViewById(R.id.main_service_stop_button);
         mStatusTextView = findViewById(R.id.main_service_tracking_status_text_view);
-        mMessageTextView = findViewById(R.id.mainMessageTextView);
+        mMessageTextView = findViewById(R.id.main_message_text_text_view);
         mAlarmButton = findViewById(R.id.mainAlarmButton);
         mTrackingStatusImageView = findViewById(R.id.main_service_tracking_status_image_view);
     }
