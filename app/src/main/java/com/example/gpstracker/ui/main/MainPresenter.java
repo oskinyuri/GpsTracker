@@ -84,7 +84,8 @@ public class MainPresenter {
                 TrackerService.LocalBinder binder = (TrackerService.LocalBinder) service;
                 mService = binder.getService();
                 mBound = true;
-                changeStatus(mService.getTrackingStatus());
+                changeTrackingStatus(mService.getTrackingStatus());
+
             }
 
             @Override
@@ -105,14 +106,14 @@ public class MainPresenter {
         mSharedPrefManager.saveCarNumber(carNumber);
         if (mBound && !mService.getTrackingStatus()) {
             startLocationTracking();
-            changeStatus(mService.getTrackingStatus());
+            changeTrackingStatus(mService.getTrackingStatus());
         }
     }
 
     void onStopButtonClicked() {
         if (mBound) {
             mService.stopTracking();
-            changeStatus(mService.getTrackingStatus());
+            changeTrackingStatus(mService.getTrackingStatus());
         }
     }
 
@@ -124,7 +125,7 @@ public class MainPresenter {
 
     void onAlarmButtonClicked() {
         if (mBound) {
-            boolean isAlarm = mService.changeAlarm();
+            boolean isAlarm = mService.changeAlarmStatus();
             updateAlarmButtonUI(isAlarm);
         }
     }
@@ -157,23 +158,24 @@ public class MainPresenter {
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void changeStatus(boolean status) {
+    private void changeTrackingStatus(boolean trackingStatus) {
         if (mView == null)
             return;
 
-        if (status) {
+        if (trackingStatus) {
             mView.setServiceStatus("Выполняется отслеживание");
             mView.setImageTrackingIsOn();
+            updateAlarmButtonUI(mService.getAlarmStatus());
         } else {
             mView.setServiceStatus("Отслеживание выключено");
             mView.setImageTrackingIsOff();
             mView.fromAlert();
         }
-        mView.setCarNumberEnabled(!status);
-        mView.setStartButtonEnabled(!status);
-        mView.setStopButtonEnabled(status);
-        mView.setAlarmButtonEnabled(status);
-        mView.setAlertButtonVisible(status);
+        mView.setCarNumberEnabled(!trackingStatus);
+        mView.setStartButtonEnabled(!trackingStatus);
+        mView.setStopButtonEnabled(trackingStatus);
+        mView.setAlarmButtonEnabled(trackingStatus);
+        mView.setAlertButtonVisible(trackingStatus);
     }
 
     private void startLocationTracking() {
@@ -185,7 +187,7 @@ public class MainPresenter {
 
         task.addOnSuccessListener(mView.getViewActivity(), locationSettingsResponse -> {
             mService.startTracking(mLocationRequest);
-            changeStatus(mService.getTrackingStatus());
+            changeTrackingStatus(mService.getTrackingStatus());
         });
 
         task.addOnFailureListener(mView.getViewActivity(), e -> {

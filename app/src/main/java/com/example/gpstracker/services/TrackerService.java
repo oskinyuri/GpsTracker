@@ -97,11 +97,15 @@ public class TrackerService extends Service {
         stopForeground(true);
     }
 
-    public boolean changeAlarm(){
+    public boolean changeAlarmStatus(){
         if (!isTracking)
             return false;
 
         isAlarm = (!isAlarm);
+        return isAlarm;
+    }
+
+    public boolean getAlarmStatus() {
         return isAlarm;
     }
 
