@@ -51,6 +51,8 @@ public class MainPresenter {
     private BroadcastReceiver mMessageReceiver;
     private IntentFilter mMessageIntentFilter;
 
+    private String mMessage = "Нет новых сообщений";
+
     MainPresenter(Context context) {
         mContext = context;
         mSharedPrefManager = new SharedPrefManager(mContext);
@@ -62,6 +64,7 @@ public class MainPresenter {
         if (mView == null)
             return;
 
+        mView.setMessage(mMessage);
         checkPermissions();
         mView.setCarNumber(mSharedPrefManager.getCarNumber());
 
@@ -129,13 +132,13 @@ public class MainPresenter {
     private void updateAlarmButtonUI(boolean isAlarm) {
         if (isAlarm) {
             mView.toAlert();
-            vibrateAndSoundOnClick();
+            vibrateAndSound();
         } else {
             mView.fromAlert();
         }
     }
 
-    private void vibrateAndSoundOnClick() {
+    private void vibrateAndSound() {
         try {
             Vibrator vibe = (Vibrator) mContext.getSystemService(Context.VIBRATOR_SERVICE);
             Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -222,7 +225,13 @@ public class MainPresenter {
     private void updateMessage(String message) {
         if (mView == null)
             return;
-        mView.setMessage(message);
+
+        if (message.equals(mMessage))
+            return;
+
+        mMessage = message;
+        mView.setMessage(mMessage);
+        vibrateAndSound();
     }
 
     private void createMessageReceiver() {
